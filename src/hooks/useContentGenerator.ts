@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useReducer, useRef } from "react";
-import type { ContentData, GenerateError, AppState, AppAction } from "@/types";
+import {
+  ALL_PLATFORMS,
+  type AppAction,
+  type AppState,
+  type ContentData,
+  type GenerateError,
+  type GenerateOptions,
+} from "@/types";
 import { parseApiResponse } from "@/utils/validation";
 
 const TIMEOUT_MS = 90_000; // 90 seconds
@@ -15,15 +22,20 @@ const initialState: AppState = {
   result: null,
   error: null,
   lastSuccessfulResult: null,
+  language: "en",
+  platforms: ALL_PLATFORMS,
 };
 
 function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case "SUBMIT_IDEA":
+    case "REGENERATE":
       return {
         ...state,
         view: "loading",
         idea: action.idea,
+        language: action.language,
+        platforms: action.platforms,
         result: null,
         error: null,
       };
@@ -48,13 +60,6 @@ function reducer(state: AppState, action: AppAction): AppState {
         error: null,
         result: null,
       };
-    case "REGENERATE":
-      return {
-        ...state,
-        view: "loading",
-        result: null,
-        error: null,
-      };
     case "NEW_IDEA":
       return { ...initialState, lastSuccessfulResult: state.lastSuccessfulResult };
     default:
@@ -67,8 +72,18 @@ export function useContentGenerator() {
   const abortRef = useRef<AbortController | null>(null);
 
   const generate = useCallback(
-    async (idea: string, isRegenerate = false) => {
-      dispatch({ type: isRegenerate ? "REGENERATE" : "SUBMIT_IDEA", idea });
+    async (
+      idea: string,
+      options: GenerateOptions & { isRegenerate?: boolean },
+    ) => {
+      const { language, platforms, isRegenerate = false } = options;
+
+      dispatch({
+        type: isRegenerate ? "REGENERATE" : "SUBMIT_IDEA",
+        idea,
+        language,
+        platforms,
+      });
 
       // Cancel any in-flight request
       if (abortRef.current) {
@@ -91,7 +106,7 @@ export function useContentGenerator() {
             "Content-Type": "application/json",
             ...(WEBHOOK_SECRET ? { "X-Webhook-Secret": WEBHOOK_SECRET } : {}),
           },
-          body: JSON.stringify({ core_idea: idea }),
+          body: JSON.stringify({ core_idea: idea, language, platforms }),
           signal: controller.signal,
         });
 
@@ -159,18 +174,31 @@ export function useContentGenerator() {
   );
 
   const submitIdea = useCallback(
-    (idea: string) => generate(idea, false),
+    (idea: string, options: GenerateOptions) =>
+      generate(idea, { ...options, isRegenerate: false }),
     [generate],
   );
 
   const regenerate = useCallback(
-    () => state.idea && generate(state.idea, true),
-    [generate, state.idea],
+    () =>
+      state.idea &&
+      generate(state.idea, {
+        isRegenerate: true,
+        language: state.language,
+        platforms: state.platforms,
+      }),
+    [generate, state.idea, state.language, state.platforms],
   );
 
   const retry = useCallback(
-    () => state.idea && generate(state.idea, false),
-    [generate, state.idea],
+    () =>
+      state.idea &&
+      generate(state.idea, {
+        isRegenerate: false,
+        language: state.language,
+        platforms: state.platforms,
+      }),
+    [generate, state.idea, state.language, state.platforms],
   );
 
   const newIdea = useCallback(() => {

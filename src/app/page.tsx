@@ -72,7 +72,9 @@ export default function HomePage() {
         <InputForm onSubmit={submitIdea} isLoading={false} />
       )}
 
-      {state.view === "loading" && <LoadingState />}
+      {state.view === "loading" && (
+        <LoadingState platforms={state.platforms} />
+      )}
 
       {state.view === "results" && state.result && (
         <ResultsView

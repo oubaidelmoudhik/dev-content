@@ -33,13 +33,26 @@ function normalizeContentData(data: unknown): ContentData {
   }
 
   const raw = data as Record<string, unknown>;
+  const result: ContentData = {};
 
-  return {
-    instagram: typeof raw.instagram === "string" ? raw.instagram : undefined,
-    facebook: typeof raw.facebook === "string" ? raw.facebook : undefined,
-    linkedin: typeof raw.linkedin === "string" ? raw.linkedin : undefined,
-    blog: normalizeBlogData(raw.blog),
-  };
+  // Preserve key presence: a key present in the raw response (even if null
+  // or malformed) is included — a key that is absent entirely is omitted.
+  // ResultsView uses this to distinguish "wasn't requested" from "failed".
+  if (raw.instagram !== undefined) {
+    result.instagram =
+      typeof raw.instagram === "string" ? raw.instagram : undefined;
+  }
+  if (raw.facebook !== undefined) {
+    result.facebook = typeof raw.facebook === "string" ? raw.facebook : undefined;
+  }
+  if (raw.linkedin !== undefined) {
+    result.linkedin = typeof raw.linkedin === "string" ? raw.linkedin : undefined;
+  }
+  if (raw.blog !== undefined) {
+    result.blog = normalizeBlogData(raw.blog);
+  }
+
+  return result;
 }
 
 function normalizeBlogData(blog: unknown): BlogData | undefined {

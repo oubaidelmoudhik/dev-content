@@ -1,6 +1,29 @@
 export type Platform = "instagram" | "facebook" | "linkedin";
 
+export type ContentPlatform = Platform | "blog";
+
+export type Language = "en" | "fr";
+
 export type AppView = "input" | "loading" | "results" | "error";
+
+export const ALL_PLATFORMS: ContentPlatform[] = [
+  "instagram",
+  "facebook",
+  "linkedin",
+  "blog",
+];
+
+export const PLATFORM_LABELS: Record<ContentPlatform, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+  blog: "Blog",
+};
+
+export interface GenerateOptions {
+  language: Language;
+  platforms: ContentPlatform[];
+}
 
 export interface BlogData {
   title?: string;
@@ -39,12 +62,24 @@ export interface AppState {
   result: ContentData | null;
   error: GenerateError | null;
   lastSuccessfulResult: ContentData | null;
+  language: Language;
+  platforms: ContentPlatform[];
 }
 
 export type AppAction =
-  | { type: "SUBMIT_IDEA"; idea: string }
+  | {
+      type: "SUBMIT_IDEA";
+      idea: string;
+      language: Language;
+      platforms: ContentPlatform[];
+    }
   | { type: "GENERATION_SUCCESS"; data: ContentData }
   | { type: "GENERATION_ERROR"; error: GenerateError }
   | { type: "RETRY" }
-  | { type: "REGENERATE" }
+  | {
+      type: "REGENERATE";
+      idea: string;
+      language: Language;
+      platforms: ContentPlatform[];
+    }
   | { type: "NEW_IDEA" };

@@ -3,7 +3,11 @@
 import { RefreshCw, ArrowLeft } from "lucide-react";
 import SocialPostCard from "./SocialPostCard";
 import BlogPostCard from "./BlogPostCard";
-import type { ContentData } from "@/types";
+import {
+  ALL_PLATFORMS,
+  type ContentData,
+  type Platform,
+} from "@/types";
 
 interface Props {
   data: ContentData;
@@ -13,6 +17,21 @@ interface Props {
   isRegenerating: boolean;
 }
 
+const RECOMMENDED_LENGTH: Record<Platform, string> = {
+  instagram: "Under ~150 words",
+  facebook: "Under ~250 words",
+  linkedin: "150–300 words",
+};
+
+/**
+ * Presence check, not value check: a key can exist in `data` while its
+ * value is null/undefined (generation was attempted and failed). Only
+ * platforms present as keys were requested and should render.
+ */
+function isPresent(data: ContentData, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(data, key);
+}
+
 export default function ResultsView({
   data,
   idea,
@@ -20,6 +39,17 @@ export default function ResultsView({
   onNewIdea,
   isRegenerating,
 }: Props) {
+  const requestedPlatforms = ALL_PLATFORMS.filter((platform) =>
+    isPresent(data, platform),
+  );
+
+  // A single card looks better centered in one column than stranded in
+  // half of a two-column grid.
+  const gridClass =
+    requestedPlatforms.length === 1
+      ? "grid grid-cols-1 gap-6 max-w-xl mx-auto"
+      : "grid grid-cols-1 md:grid-cols-2 gap-6";
+
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* Header */}
@@ -57,24 +87,21 @@ export default function ResultsView({
         </div>
       </div>
 
-      {/* Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SocialPostCard
-          platform="instagram"
-          text={data.instagram}
-          recommendedLength="Under ~150 words"
-        />
-        <SocialPostCard
-          platform="facebook"
-          text={data.facebook}
-          recommendedLength="Under ~250 words"
-        />
-        <SocialPostCard
-          platform="linkedin"
-          text={data.linkedin}
-          recommendedLength="150–300 words"
-        />
-        <BlogPostCard blog={data.blog} />
+      {/* Cards grid — only render platforms present in the response data */}
+      <div className={gridClass}>
+        {requestedPlatforms.map((platform) => {
+          if (platform === "blog") {
+            return <BlogPostCard key="blog" blog={data.blog} />;
+          }
+          return (
+            <SocialPostCard
+              key={platform}
+              platform={platform}
+              text={data[platform]}
+              recommendedLength={RECOMMENDED_LENGTH[platform]}
+            />
+          );
+        })}
       </div>
     </div>
   );
