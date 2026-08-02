@@ -38,6 +38,37 @@ export interface ContentData {
   blog?: BlogData;
 }
 
+/** One platform's content for the /log-final feedback endpoint. */
+export interface SaveRoundItem {
+  platform: ContentPlatform;
+  content: string;
+}
+
+/** Payload sent to the /log-final feedback endpoint. */
+export interface SaveRoundPayload {
+  core_idea: string;
+  language: Language;
+  items: SaveRoundItem[];
+}
+
+/** Result shape returned by the /log-final endpoint. */
+export interface SaveRoundResponse {
+  success: boolean;
+  error?: string;
+}
+
+/** Reads a card's current (possibly edited) content on demand. */
+export type CardValueGetter = () => string | BlogData;
+
+/**
+ * Registers/unregisters a value getter with the results view so the
+ * "Save this round" button can collect the live text from rendered cards.
+ */
+export type RegisterValueGetter = (
+  platform: ContentPlatform,
+  getter: CardValueGetter | null,
+) => void;
+
 export interface ApiSuccessResponse {
   success: true;
   data: ContentData;

@@ -80,6 +80,7 @@ export default function HomePage() {
         <ResultsView
           data={state.result}
           idea={state.idea}
+          language={state.language}
           onRegenerate={regenerate}
           onNewIdea={newIdea}
           isRegenerating={false}

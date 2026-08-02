@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Check, Copy, Instagram, Facebook, Linkedin } from "lucide-react";
-import type { Platform } from "@/types";
+import type {
+  Platform,
+  RegisterValueGetter,
+} from "@/types";
 
 interface Props {
   platform: Platform;
   text: string | undefined;
   recommendedLength: string;
+  registerValueGetter: RegisterValueGetter;
 }
 
 const platformConfig: Record<
@@ -49,12 +53,22 @@ export default function SocialPostCard({
   platform,
   text,
   recommendedLength,
+  registerValueGetter,
 }: Props) {
   const config = platformConfig[platform];
   const Icon = config.icon;
   const [copied, setCopied] = useState(false);
   const [editedText, setEditedText] = useState(text ?? "");
   const isMissing = !text;
+
+  // Expose the current text to "Save this round". Only registered when the
+  // card actually rendered (not missing), so failed platforms are excluded.
+  useEffect(() => {
+    if (isMissing) return;
+    const getter = () => editedText;
+    registerValueGetter(platform, getter);
+    return () => registerValueGetter(platform, null);
+  }, [isMissing, platform, registerValueGetter, editedText]);
 
   const wordCount = editedText.trim()
     ? editedText.trim().split(/\s+/).length

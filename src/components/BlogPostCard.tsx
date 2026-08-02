@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Check, Copy, FileText } from "lucide-react";
-import type { BlogData } from "@/types";
+import type { BlogData, RegisterValueGetter } from "@/types";
 
 interface FieldCopyState {
   title: boolean;
@@ -12,9 +12,10 @@ interface FieldCopyState {
 
 interface Props {
   blog: BlogData | undefined;
+  registerValueGetter: RegisterValueGetter;
 }
 
-export default function BlogPostCard({ blog }: Props) {
+export default function BlogPostCard({ blog, registerValueGetter }: Props) {
   const [title, setTitle] = useState(blog?.title ?? "");
   const [meta, setMeta] = useState(blog?.meta ?? "");
   const [body, setBody] = useState(blog?.body ?? "");
@@ -25,6 +26,15 @@ export default function BlogPostCard({ blog }: Props) {
   });
 
   const isMissing = !blog || (!blog.title && !blog.meta && !blog.body);
+
+  // Expose the current title/meta/body to "Save this round". Only registered
+  // when the card actually rendered, so failed platforms are excluded.
+  useEffect(() => {
+    if (isMissing) return;
+    const getter = () => ({ title, meta, body });
+    registerValueGetter("blog", getter);
+    return () => registerValueGetter("blog", null);
+  }, [isMissing, registerValueGetter, title, meta, body]);
 
   const handleCopy = useCallback(async (field: keyof FieldCopyState, value: string) => {
     if (!value) return;
