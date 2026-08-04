@@ -15,6 +15,7 @@ import {
   type GenerateOptions,
   type Language,
 } from "@/types";
+import IdeaSuggestions from "@/components/IdeaSuggestions";
 
 interface Props {
   onSubmit: (idea: string, options: GenerateOptions) => void;
@@ -48,6 +49,10 @@ export default function InputForm({ onSubmit, isLoading, initialValue }: Props) 
         : [...prev, platform],
     );
   };
+
+  // Selecting a suggestion only fills the textarea — the existing submit,
+  // validation, and editing flow remains untouched.
+  const handleSelectSuggestion = (idea: string) => setText(idea);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -84,6 +89,9 @@ export default function InputForm({ onSubmit, isLoading, initialValue }: Props) 
             className="w-full bg-white/60 border border-white/80 shadow-inner rounded-2xl p-6 focus:bg-white focus:border-blue-400 focus:outline-none font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal resize-none transition-all duration-200"
             disabled={isLoading}
           />
+
+          {/* AI-suggested ideas — an alternative way to fill the textarea */}
+          <IdeaSuggestions language={language} onSelect={handleSelectSuggestion} />
 
           {/* Language toggle */}
           <div className="mt-6">

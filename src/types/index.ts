@@ -57,6 +57,17 @@ export interface SaveRoundResponse {
   error?: string;
 }
 
+/** One AI-suggested content idea returned by the /suggest-ideas endpoint. */
+export interface IdeaSuggestion {
+  topic: string;
+  idea: string;
+}
+
+/** Result shape returned by the /suggest-ideas endpoint. */
+export type SuggestIdeasResponse =
+  | { success: true; ideas: IdeaSuggestion[] }
+  | { success: false; error?: string };
+
 /** Reads a card's current (possibly edited) content on demand. */
 export type CardValueGetter = () => string | BlogData;
 
